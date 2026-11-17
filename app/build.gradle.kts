@@ -3,14 +3,15 @@ plugins {
 }
 
 android {
-    namespace = "com.example.praktikum03"
+    namespace = "com.example.praktikum04"
     compileSdk {
+
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.praktikum03"
-        minSdk = 28
+        applicationId = "com.example.praktikum04"
+        minSdk = 24
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"

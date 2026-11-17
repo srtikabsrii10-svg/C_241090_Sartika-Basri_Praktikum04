@@ -1,7 +1,8 @@
-package com.example.praktikum03
+package com.example.praktikum04
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
@@ -30,6 +31,7 @@ class DatabaseHelper(context: Context) :
         onCreate(db)
     }
 
+    // Data awal mahasiswa
     private fun seedData(db: SQLiteDatabase) {
         val seed = listOf(
             Mahasiswa(
@@ -60,6 +62,7 @@ class DatabaseHelper(context: Context) :
         }
     }
 
+    // Mengubah objek Mahasiswa menjadi ContentValues
     private fun toValues(mhs: Mahasiswa) = ContentValues().apply {
         put("nim", mhs.nim)
         put("nama", mhs.nama)
@@ -68,11 +71,15 @@ class DatabaseHelper(context: Context) :
         put("nomor_hp", mhs.nomorHp)
     }
 
-    // Create: mengembalikan id baris baru, atau -1 bila gagal.
+    // Create: menambahkan mahasiswa baru
     fun insertMahasiswa(mhs: Mahasiswa): Long =
-        writableDatabase.insert(TABLE_MAHASISWA, null, toValues(mhs))
+        writableDatabase.insert(
+            TABLE_MAHASISWA,
+            null,
+            toValues(mhs)
+        )
 
-    // Update: mengembalikan jumlah baris yang berubah.
+    // Update: mengubah data mahasiswa
     fun updateMahasiswa(mhs: Mahasiswa): Int =
         writableDatabase.update(
             TABLE_MAHASISWA,
@@ -81,7 +88,7 @@ class DatabaseHelper(context: Context) :
             arrayOf(mhs.id.toString())
         )
 
-    // Delete: mengembalikan jumlah baris yang terhapus.
+    // Delete: menghapus mahasiswa berdasarkan ID
     fun deleteMahasiswa(id: Int): Int =
         writableDatabase.delete(
             TABLE_MAHASISWA,
@@ -89,8 +96,11 @@ class DatabaseHelper(context: Context) :
             arrayOf(id.toString())
         )
 
-    // Memeriksa apakah NIM sudah digunakan baris lain.
-    fun isNimTerdaftar(nim: String, exceptId: Int = 0): Boolean {
+    // Memeriksa NIM ganda
+    fun isNimTerdaftar(
+        nim: String,
+        exceptId: Int = 0
+    ): Boolean {
         val cursor = readableDatabase.query(
             TABLE_MAHASISWA,
             arrayOf("id"),
@@ -101,11 +111,15 @@ class DatabaseHelper(context: Context) :
             null
         )
 
-        return cursor.use { it.moveToFirst() }
+        return cursor.use {
+            it.moveToFirst()
+        }
     }
 
+    // Mengambil seluruh data mahasiswa
     fun getAllMahasiswa(): List<Mahasiswa> {
         val list = mutableListOf<Mahasiswa>()
+
         val cursor = readableDatabase.query(
             TABLE_MAHASISWA,
             null,
@@ -118,27 +132,62 @@ class DatabaseHelper(context: Context) :
 
         cursor.use {
             while (it.moveToNext()) {
-                list.add(
-                    Mahasiswa(
-                        id = it.getInt(it.getColumnIndexOrThrow("id")),
-                        nim = it.getString(it.getColumnIndexOrThrow("nim")),
-                        nama = it.getString(it.getColumnIndexOrThrow("nama")),
-                        alamat = it.getString(it.getColumnIndexOrThrow("alamat")),
-                        jurusan = it.getString(it.getColumnIndexOrThrow("jurusan")),
-                        nomorHp = it.getString(
-                            it.getColumnIndexOrThrow("nomor_hp")
-                        )
-                    )
-                )
+                list.add(toMahasiswa(it))
             }
         }
 
         return list
     }
 
+    // Mengambil satu data mahasiswa berdasarkan ID
+    fun getMahasiswaById(id: Int): Mahasiswa? {
+        val cursor = readableDatabase.query(
+            TABLE_MAHASISWA,
+            null,
+            "id = ?",
+            arrayOf(id.toString()),
+            null,
+            null,
+            null
+        )
+
+        cursor.use {
+            if (it.moveToFirst()) {
+                return toMahasiswa(it)
+            }
+        }
+
+        return null
+    }
+
+    // Mengubah satu baris Cursor menjadi objek Mahasiswa
+    private fun toMahasiswa(cursor: Cursor): Mahasiswa {
+        return Mahasiswa(
+            id = cursor.getInt(
+                cursor.getColumnIndexOrThrow("id")
+            ),
+            nim = cursor.getString(
+                cursor.getColumnIndexOrThrow("nim")
+            ),
+            nama = cursor.getString(
+                cursor.getColumnIndexOrThrow("nama")
+            ),
+            alamat = cursor.getString(
+                cursor.getColumnIndexOrThrow("alamat")
+            ),
+            jurusan = cursor.getString(
+                cursor.getColumnIndexOrThrow("jurusan")
+            ),
+            nomorHp = cursor.getString(
+                cursor.getColumnIndexOrThrow("nomor_hp")
+            )
+        )
+    }
+
     companion object {
         private const val DB_NAME = "praktikum.db"
         private const val DB_VERSION = 1
+
         const val TABLE_MAHASISWA = "mahasiswa"
     }
 }

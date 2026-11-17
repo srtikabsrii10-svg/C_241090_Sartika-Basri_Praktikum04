@@ -1,4 +1,4 @@
-package com.example.praktikum03
+package com.example.praktikum04
 
 data class Mahasiswa(
     val id: Int = 0,
